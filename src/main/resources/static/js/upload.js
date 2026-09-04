@@ -1,8 +1,6 @@
-async function uploadToServer (formObj) {
-
-    console.log("upload to server......")
-    console.log(formObj)
-
+// 파일 업로드
+async function uploadToServer(formObj) {
+    console.log("upload to server...");
     const response = await axios({
         method: 'post',
         url: '/upload',
@@ -12,13 +10,11 @@ async function uploadToServer (formObj) {
         },
     });
 
-    return response.data
+    return response.data;
 }
 
-async function removeFileToServer(uuid, fileName){
-
-    const response = await axios.delete(`/remove/${uuid}_${fileName}`)
-
-    return response.data
-
+// S3 파일 삭제 (기존 deleteFile -> removeFileToServer 명칭 정합)
+async function removeFileToServer(fileName) {
+    const response = await axios.delete(`/remove/${fileName}`);
+    return response.data;
 }
