@@ -1,6 +1,5 @@
 <!doctype html>
-<html lang="ko"
-	xmlns:th="http://www.thymeleaf.org"
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head>
 <meta charset="utf-8">
@@ -24,7 +23,7 @@
 				<div class="col">
 					<nav class="navbar navbar-expand-lg navbar-light bg-light">
 						<div class="container-fluid">
-							<a class="navbar-brand" href="#">Navbar</a>
+							<a class="navbar-brand" href="#">Navigation Bar</a>
 							<button class="navbar-toggler" type="button"
 								data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
 								aria-controls="navbarNavAltMarkup" aria-expanded="false"
@@ -32,42 +31,27 @@
 								<span class="navbar-toggler-icon"></span>
 							</button>
 							<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-								<div class="navbar-nav">
-									<a class="nav-link active" aria-current="page" href="#">Home</a>
-									<a class="nav-link" href="#">Features</a> <a class="nav-link"
-										href="#">Pricing</a> <a class="nav-link disabled">Disabled</a>
-								</div>
 
 								<!-- 관리자에게만 회원 관리 버튼 표시 -->
 								<a sec:authorize="hasAuthority('ROLE_ADMIN')"
-									th:href="@{/member/list}"
-									class="btn btn-outline-primary ms-2">
-									회원 관리
-								</a>
+									th:href="@{/member/list}" class="btn btn-outline-primary ms-2">
+									회원 관리 </a>
 
 								<!-- 로그인 회원에게만 내 정보 수정 버튼 표시 -->
-								<a sec:authorize="isAuthenticated()"
-									th:href="@{/member/modify}"
-									class="btn btn-outline-secondary ms-2">
-									내 정보 수정
-								</a>
+								<a sec:authorize="isAuthenticated()" th:href="@{/member/modify}"
+									class="btn btn-outline-secondary ms-2"> 내 정보 수정 </a>
 
 								<!-- 로그인 회원에게만 탈퇴 버튼 표시 -->
 								<form sec:authorize="isAuthenticated()"
-									th:action="@{/member/remove}"
-									method="post"
+									th:action="@{/member/remove}" method="post"
 									class="d-inline ms-2"
 									onsubmit="return confirm('정말 회원 탈퇴하시겠습니까?');">
 									<button type="submit" class="btn btn-outline-danger">
-										회원 탈퇴
-									</button>
+										회원 탈퇴</button>
 								</form>
-								
-								<a sec:authorize="isAuthenticated()"
-									th:href="@{/logout}"
-									class="btn btn-outline-secondary ms-2">
-									로그아웃
-								</a>
+
+								<a sec:authorize="isAuthenticated()" th:href="@{/logout}"
+									class="btn btn-outline-secondary ms-2"> 로그아웃 </a>
 							</div>
 						</div>
 					</nav>
@@ -171,9 +155,9 @@
 											<div
 												th:if="${dto.boardImages != null && dto.boardImages.size() > 0}">
 												<img
-													style="width: 50px; height: 50px; object-fit: cover; margin-right: 5px;"
-													th:each="boardImage: ${dto.boardImages}"
-													th:src="|/view/s_${boardImage.uuid}_${boardImage.filename}|">
+													th:src="|https://oti-s3-moong.s3.ap-northeast-2.amazonaws.com/${dto.boardImages[0].uuid}_${dto.boardImages[0].filename}|"
+													style="width: 60px; height: 60px; object-fit: cover;"
+													class="rounded img-thumbnail">
 											</div>
 										</td>
 										<td th:text="${dto.writer}">Writer</td>

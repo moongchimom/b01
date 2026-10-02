@@ -71,15 +71,15 @@
 									<span class="input-group-text">Writer</span> <input type="text"
 										name="writer" id="writer" class="form-control"
 										th:value="${#authentication.principal.username}"
-										readonly="readonly"
-										placeholder="Writer ID">
+										readonly="readonly" placeholder="Writer ID">
 								</div>
 
 								<div class="input-group mb-3">
 									<span class="input-group-text">Images</span>
 									<!-- 업로드된 파일 이름을 hidden으로 담을 영역 -->
 									<div class="float-end uploadHidden">
-										<button type="button" class="btn btn-primary uploadFileBtn">ADD Files</button>
+										<button type="button" class="btn btn-primary uploadFileBtn">ADD
+											Files</button>
 									</div>
 								</div>
 
@@ -96,11 +96,12 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<!-- 첨부 파일 섬네일을 보여줄 부분 -->
 			<div class="row mt-3">
 				<div class="col">
-					<div class="container-fluid d-flex uploadResult" style="flex-wrap: wrap;"></div>
+					<div class="container-fluid d-flex uploadResult"
+						style="flex-wrap: wrap;"></div>
 				</div>
 			</div>
 
@@ -166,17 +167,17 @@
 		}
 
 		// 2. 썸네일 화면 출력을 담당하는 함수 (중복 꼬임 방지: insertAdjacentHTML 사용)
-		function showUploadFile({uuid, fileName, link}){
+		function showUploadFile({uuid, filename, link, realFilename}){
 			const uploadResult = document.querySelector(".uploadResult");
-			const realFileName = fileName || arguments[0].filename;
+//			const realFileName = fileName || arguments[0].filename;
 
 			const str = `<div class="card col-4">
 					<div class="card-header d-flex justify-content-center">
-						${realFileName}
-						<button class="btn-sm btn-danger ms-2" type="button" onclick="removeFile('${uuid}', '${realFileName}', this)">X</button>
+						${filename}
+						<button class="btn-sm btn-danger ms-2" type="button" onclick="removeFile('${uuid}', '${filename}', this)">X</button>
 					</div>
 					<div class="card-body d-flex justify-content-center">
-						 <img src="/view/${link}" data-src="${uuid+"_"+realFileName}" style="width:100px; height:100px; object-fit:cover;">
+						 <img src="${realFilename}" data-src="${realFilename}" style="width:100px; height:100px; object-fit:cover;">
 					</div>
 				</div><!-- card -->`;
 
@@ -222,7 +223,7 @@
 			}, false);
 		});
 	</script>
-	
+
 	<script th:inline="javascript">
 	
 		const auth = [[${#authentication.principal}]];

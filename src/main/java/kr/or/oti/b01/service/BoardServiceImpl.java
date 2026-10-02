@@ -1,5 +1,7 @@
 package kr.or.oti.b01.service;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,26 +11,31 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import kr.or.oti.b01.domain.Board;
+import kr.or.oti.b01.domain.BoardImage;
 import kr.or.oti.b01.dto.BoardDTO;
 import kr.or.oti.b01.dto.BoardListAllDTO;
 import kr.or.oti.b01.dto.BoardListReplyCountDTO;
 import kr.or.oti.b01.dto.PageRequestDTO;
 import kr.or.oti.b01.dto.PageResponseDTO;
 import kr.or.oti.b01.repository.BoardRepository;
+import kr.or.oti.b01.util.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class BoardServiceImpl implements BoardService {
+
 	private final BoardRepository boardRepository;
 	private final ModelMapper mapper;
+	private final S3Uploader s3Uploader;
 	
 	public void register(BoardDTO boardDTO) {
-//		boardRepository.save(mapper.map(boardDTO, Board.class));
 		Board board = dtoToEntity(boardDTO);
 		boardRepository.save(board);
 		
@@ -55,44 +62,64 @@ public class BoardServiceImpl implements BoardService {
 	}
 	
 	public BoardDTO get(long bno) {
-	    // Optional 처리: 데이터가 없을 경우 NoSuchElementException 발생
-	    Board board = boardRepository.findByIdWithImages(bno)
-	            .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. bno=" + bno));
-	    
-//	    return mapper.map(board, BoardDTO.class);
-	    return entityToDto(board);
+		Board board = boardRepository.findByIdWithImages(bno)
+				.orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. bno=" + bno));
+		
+		return entityToDto(board);
 	}
 
 	public void remove(long bno) {
+		Board board = boardRepository.findByIdWithImages(bno).orElse(null);
+		if (board != null && board.getImageSet() != null) {
+			for (BoardImage boardImage : board.getImageSet()) {
+				String s3Key = boardImage.getUuid() + "_" + boardImage.getFilename();
+				log.info("게시글 삭제에 따른 S3 파일 삭제: {}", s3Key);
+				s3Uploader.removeS3File(s3Key);
+			}
+		}
 		boardRepository.deleteById(bno);
 	}
 
 	public void modify(BoardDTO boardDTO) {
-	    Board board = boardRepository.findByIdWithImages(boardDTO.getBno())
-	            .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. bno=" + boardDTO.getBno()));
-	    
-	    board.change(boardDTO.getTitle(), boardDTO.getContent());
-	    
-	    board.clearImages();
-	    
-		if (boardDTO.getFileNames() != null) {
-			boardDTO.getFileNames().forEach(fileName -> {
-				String[] arr = fileName.split("_");
-				board.addImage(arr[0], arr[1]);
-			});
-		}	    
-	    
-		boardRepository.save(board);
-	}
-	public void removeBatch(List<Long> bnos) {
-        log.info("removeBatch bnos: {}", bnos);
+        Board board = boardRepository.findByIdWithImages(boardDTO.getBno())
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. bno=" + boardDTO.getBno()));
+        
+        board.change(boardDTO.getTitle(), boardDTO.getContent());
+        board.clearImages();
+        
+        if (boardDTO.getFileNames() != null) {
+            boardDTO.getFileNames().forEach(fileName -> {
+                String pureFileName = fileName;
+                if (pureFileName.contains("/")) {
+                    pureFileName = pureFileName.substring(pureFileName.lastIndexOf("/") + 1);
+                }
+                try {
+                    pureFileName = URLDecoder.decode(pureFileName, StandardCharsets.UTF_8.name());
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
 
-        if (bnos == null || bnos.isEmpty()) {
-            return;
-        }
-
-        boardRepository.deleteAllById(bnos);
+                String[] arr = pureFileName.split("_", 2);
+                if (arr.length == 2) {
+                    board.addImage(arr[0], arr[1]);
+                }
+            });
+        }		
+        
+        boardRepository.save(board);
     }
+
+	public void removeBatch(List<Long> bnos) {
+		log.info("removeBatch bnos: {}", bnos);
+
+		if (bnos == null || bnos.isEmpty()) {
+			return;
+		}
+
+		for (Long bno : bnos) {
+			remove(bno);
+		}
+	}
 
 	public PageResponseDTO<BoardListReplyCountDTO> listWithReplyCount(PageRequestDTO pageRequestDTO) {
 		Pageable pageable = PageRequest.of(pageRequestDTO.getPage()-1, pageRequestDTO.getSize(), Sort.by("bno").descending());

@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @SpringBootApplication
 @EnableJpaAuditing
 public class B01Application {
-
+	
+	//로그인 기능 구현함
 	public static void main(String[] args) {
 		SpringApplication.run(B01Application.class, args);
 	}

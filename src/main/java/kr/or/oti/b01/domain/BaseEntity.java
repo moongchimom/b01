@@ -11,6 +11,8 @@ import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 
+//BaseEntity는 모든 DB테이블에서 공통으로 필요한 등록일과 수정일
+//컬럼을 사용하기 위함
 @MappedSuperclass
 @EntityListeners(value = { AuditingEntityListener.class })
 @Getter
